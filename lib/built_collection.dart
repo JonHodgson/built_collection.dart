@@ -110,3 +110,4 @@ export 'src/list_multimap.dart' hide OverriddenHashcodeBuiltListMultimap;
 export 'src/map.dart' hide OverriddenHashcodeBuiltMap;
 export 'src/set.dart' hide OverriddenHashcodeBuiltSet;
 export 'src/set_multimap.dart' hide OverriddenHashcodeBuiltSetMultimap;
+export 'src/sorted_list.dart' hide OverriddenHashcodeBuiltSortedList;

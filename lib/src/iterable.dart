@@ -6,5 +6,6 @@ library built_collection.iterable;
 
 import 'package:built_collection/src/list.dart' show BuiltList;
 import 'package:built_collection/src/set.dart' show BuiltSet;
+import 'package:built_collection/src/sorted_list.dart' show BuiltSortedList;
 
 part 'iterable/built_iterable.dart';
