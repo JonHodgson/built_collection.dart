@@ -27,7 +27,7 @@ class MapBuilder<K, V> {
   ///
   /// Rejects nulls. Rejects keys and values of the wrong type.
   factory MapBuilder([map = const {}]) {
-    return new MapBuilder<K, V>._uninitialized()..replace(map);
+    return MapBuilder<K, V>._uninitialized()..replace(map);
   }
 
   /// Converts to a [BuiltMap].
@@ -35,14 +35,12 @@ class MapBuilder<K, V> {
   /// The `MapBuilder` can be modified again and used to create any number
   /// of `BuiltMap`s.
   BuiltMap<K, V> build() {
-    if (_mapOwner == null) {
-      _mapOwner = new _BuiltMap<K, V>.withSafeMap(_mapFactory, _map);
-    }
+    _mapOwner ??= _BuiltMap<K, V>.withSafeMap(_mapFactory, _map);
     return _mapOwner;
   }
 
   /// Applies a function to `this`.
-  void update(updates(MapBuilder<K, V> builder)) {
+  void update(Function(MapBuilder<K, V> builder) updates) {
     updates(this);
   }
 
@@ -63,8 +61,7 @@ class MapBuilder<K, V> {
       });
       _setSafeMap(replacement);
     } else {
-      throw new ArgumentError(
-          'expected Map or BuiltMap, got ${map.runtimeType}');
+      throw ArgumentError('expected Map or BuiltMap, got ${map.runtimeType}');
     }
   }
 
@@ -86,7 +83,7 @@ class MapBuilder<K, V> {
   /// Use [withDefaultBase] to reset `base` to the default value.
   void withBase(_MapFactory<K, V> base) {
     if (base == null) {
-      throw new ArgumentError.notNull('base');
+      throw ArgumentError.notNull('base');
     }
     _mapFactory = base;
     _setSafeMap(_createMap()..addAll(_map));
@@ -103,9 +100,9 @@ class MapBuilder<K, V> {
   ///
   /// [key] and [value] default to the identity function.
   void addIterable<T>(Iterable<T> iterable,
-      {K key(T element), V value(T element)}) {
-    if (key == null) key = (T x) => x as K;
-    if (value == null) value = (T x) => x as V;
+      {K Function(T) key, V Function(T) value}) {
+    key ??= (T x) => x as K;
+    value ??= (T x) => x as V;
     for (var element in iterable) {
       this[key(element)] = value(element);
     }
@@ -133,7 +130,7 @@ class MapBuilder<K, V> {
   bool get isNotEmpty => _map.isNotEmpty;
 
   /// As [Map.putIfAbsent].
-  V putIfAbsent(K key, V ifAbsent()) {
+  V putIfAbsent(K key, V Function() ifAbsent) {
     _checkKey(key);
     return _safeMap.putIfAbsent(key, () {
       var value = ifAbsent();
@@ -153,7 +150,7 @@ class MapBuilder<K, V> {
   V remove(Object key) => _safeMap.remove(key);
 
   /// As [Map.removeWhere].
-  void removeWhere(bool predicate(K key, V value)) {
+  void removeWhere(bool Function(K, V) predicate) {
     _safeMap.removeWhere(predicate);
   }
 
@@ -168,11 +165,11 @@ class MapBuilder<K, V> {
   }
 
   /// As [Map.update].
-  V updateValue(K key, V update(V value), {V ifAbsent()}) =>
+  V updateValue(K key, V Function(V) update, {V Function() ifAbsent}) =>
       _safeMap.update(key, update, ifAbsent: ifAbsent);
 
   /// As [Map.updateAll].
-  void updateAllValues(V update(K key, V value)) {
+  void updateAllValues(V Function(K, V) update) {
     _safeMap.updateAll(update);
   }
 
@@ -207,23 +204,22 @@ class MapBuilder<K, V> {
     return _map;
   }
 
-  Map<K, V> _createMap() =>
-      _mapFactory != null ? _mapFactory() : new Map<K, V>();
+  Map<K, V> _createMap() => _mapFactory != null ? _mapFactory() : <K, V>{};
 
   void _checkGenericTypeParameter() {
     if (K == dynamic) {
-      throw new UnsupportedError(
+      throw UnsupportedError(
           'explicit key type required, for example "new MapBuilder<int, int>"');
     }
     if (V == dynamic) {
-      throw new UnsupportedError('explicit value type required, '
+      throw UnsupportedError('explicit value type required, '
           'for example "new MapBuilder<int, int>"');
     }
   }
 
   void _checkKey(K key) {
     if (identical(key, null)) {
-      throw new ArgumentError('null key');
+      throw ArgumentError('null key');
     }
   }
 
@@ -235,7 +231,7 @@ class MapBuilder<K, V> {
 
   void _checkValue(V value) {
     if (identical(value, null)) {
-      throw new ArgumentError('null value');
+      throw ArgumentError('null value');
     }
   }
 

@@ -17,7 +17,7 @@ abstract class BuiltSetMultimap<K, V> {
   final Map<K, BuiltSet<V>> _map;
 
   // Precomputed.
-  final BuiltSet<V> _emptySet = new BuiltSet<V>();
+  final BuiltSet<V> _emptySet = BuiltSet<V>();
 
   // Cached.
   int _hashCode;
@@ -43,25 +43,25 @@ abstract class BuiltSetMultimap<K, V> {
     } else if (multimap is Map ||
         multimap is SetMultimap ||
         multimap is BuiltSetMultimap) {
-      return new _BuiltSetMultimap<K, V>.copyAndCheck(
+      return _BuiltSetMultimap<K, V>.copyAndCheck(
           multimap.keys, (k) => multimap[k]);
     } else {
-      throw new ArgumentError('expected Map, SetMultimap or BuiltSetMultimap, '
+      throw ArgumentError('expected Map, SetMultimap or BuiltSetMultimap, '
           'got ${multimap.runtimeType}');
     }
   }
 
   /// Creates a [SetMultimapBuilder], applies updates to it, and builds.
-  factory BuiltSetMultimap.build(updates(SetMultimapBuilder<K, V> builder)) =>
-      (new SetMultimapBuilder<K, V>()..update(updates)).build();
+  factory BuiltSetMultimap.build(Function(SetMultimapBuilder<K, V>) updates) =>
+      (SetMultimapBuilder<K, V>()..update(updates)).build();
 
   /// Converts to a [SetMultimapBuilder] for modification.
   ///
   /// The `BuiltSetMultimap` remains immutable and can continue to be used.
-  SetMultimapBuilder<K, V> toBuilder() => new SetMultimapBuilder<K, V>(this);
+  SetMultimapBuilder<K, V> toBuilder() => SetMultimapBuilder<K, V>(this);
 
   /// Converts to a [SetMultimapBuilder], applies updates to it, and builds.
-  BuiltSetMultimap<K, V> rebuild(updates(SetMultimapBuilder<K, V> builder)) =>
+  BuiltSetMultimap<K, V> rebuild(Function(SetMultimapBuilder<K, V>) updates) =>
       (toBuilder()..update(updates)).build();
 
   /// Converts to a [Map].
@@ -72,7 +72,7 @@ abstract class BuiltSetMultimap<K, V> {
   ///
   /// This allows efficient use of APIs that ask for a mutable collection
   /// but don't actually mutate it.
-  Map<K, BuiltSet<V>> toMap() => new CopyOnWriteMap<K, BuiltSet<V>>(_map);
+  Map<K, BuiltSet<V>> toMap() => CopyOnWriteMap<K, BuiltSet<V>>(_map);
 
   /// Deep hashCode.
   ///
@@ -81,12 +81,10 @@ abstract class BuiltSetMultimap<K, V> {
   /// to be the same.
   @override
   int get hashCode {
-    if (_hashCode == null) {
-      _hashCode = hashObjects(_map.keys
-          .map((key) => hash2(key.hashCode, _map[key].hashCode))
-          .toList(growable: false)
-            ..sort());
-    }
+    _hashCode ??= hashObjects(_map.keys
+        .map((key) => hash2(key.hashCode, _map[key].hashCode))
+        .toList(growable: false)
+          ..sort());
     return _hashCode;
   }
 
@@ -110,7 +108,7 @@ abstract class BuiltSetMultimap<K, V> {
   ///
   /// Useful when producing or using APIs that need the [Map] interface. This
   /// differs from [toMap] where mutations are explicitly disallowed.
-  Map<K, Iterable<V>> asMap() => new Map<K, Iterable<V>>.unmodifiable(_map);
+  Map<K, Iterable<V>> asMap() => Map<K, Iterable<V>>.unmodifiable(_map);
 
   @override
   String toString() => _map.toString();
@@ -130,7 +128,7 @@ abstract class BuiltSetMultimap<K, V> {
   bool containsValue(Object value) => values.contains(value);
 
   /// As [SetMultimap.forEach].
-  void forEach(void f(K key, V value)) {
+  void forEach(void Function(K, V) f) {
     _map.forEach((key, values) {
       values.forEach((value) {
         f(key, value);
@@ -139,7 +137,7 @@ abstract class BuiltSetMultimap<K, V> {
   }
 
   /// As [SetMultimap.forEachKey].
-  void forEachKey(void f(K key, Iterable<V> value)) {
+  void forEachKey(void Function(K, Iterable<V>) f) {
     _map.forEach((key, values) {
       f(key, values);
     });
@@ -154,9 +152,7 @@ abstract class BuiltSetMultimap<K, V> {
   /// As [SetMultimap.keys], but result is stable; it always returns the same
   /// instance.
   Iterable<K> get keys {
-    if (_keys == null) {
-      _keys = _map.keys;
-    }
+    _keys ??= _map.keys;
     return _keys;
   }
 
@@ -166,9 +162,7 @@ abstract class BuiltSetMultimap<K, V> {
   /// As [SetMultimap.values], but result is stable; it always returns the
   /// same instance.
   Iterable<V> get values {
-    if (_values == null) {
-      _values = _map.values.expand((x) => x);
-    }
+    _values ??= _map.values.expand((x) => x);
     return _values;
   }
 
@@ -176,11 +170,11 @@ abstract class BuiltSetMultimap<K, V> {
 
   BuiltSetMultimap._(this._map) {
     if (K == dynamic) {
-      throw new UnsupportedError('explicit key type required, '
+      throw UnsupportedError('explicit key type required, '
           'for example "new BuiltSetMultimap<int, int>"');
     }
     if (V == dynamic) {
-      throw new UnsupportedError('explicit value type required,'
+      throw UnsupportedError('explicit value type required,'
           ' for example "new BuiltSetMultimap<int, int>"');
     }
   }
@@ -191,12 +185,12 @@ class _BuiltSetMultimap<K, V> extends BuiltSetMultimap<K, V> {
   _BuiltSetMultimap.withSafeMap(Map<K, BuiltSet<V>> map) : super._(map);
 
   _BuiltSetMultimap.copyAndCheck(Iterable keys, Function lookup)
-      : super._(new Map<K, BuiltSet<V>>()) {
+      : super._(<K, BuiltSet<V>>{}) {
     for (var key in keys) {
       if (key is K) {
-        _map[key] = new BuiltSet<V>(lookup(key));
+        _map[key] = BuiltSet<V>(lookup(key));
       } else {
-        throw new ArgumentError('map contained invalid key: $key');
+        throw ArgumentError('map contained invalid key: $key');
       }
     }
   }

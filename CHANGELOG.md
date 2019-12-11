@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.3.0
+
+- Add extensions methods: `List.build`, `Set.build`, `Map.build`,
+  `Iterable.toBuiltList` and `Iterable.toBuiltSet`. Requires SDK 2.6.0.
+- Cleanup: remove unnecessary `new` and `const`.
+
 ## 4.2.2
 
 - Bug fix: `ListMultimapBuilder.[]` no longer ignores modifications under some

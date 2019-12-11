@@ -25,7 +25,7 @@ class ListBuilder<E> {
   ///
   /// Rejects nulls. Rejects elements of the wrong type.
   factory ListBuilder([Iterable iterable = const []]) {
-    return new ListBuilder<E>._uninitialized()..replace(iterable);
+    return ListBuilder<E>._uninitialized()..replace(iterable);
   }
 
   /// Converts to a [BuiltList].
@@ -34,13 +34,13 @@ class ListBuilder<E> {
   /// of `BuiltList`s.
   BuiltList<E> build() {
     if (_listOwner == null) {
-      _setOwner(new _BuiltList<E>.withSafeList(_list));
+      _setOwner(_BuiltList<E>.withSafeList(_list));
     }
     return _listOwner;
   }
 
   /// Applies a function to `this`.
-  void update(updates(ListBuilder<E> builder)) {
+  void update(Function(ListBuilder<E>) updates) {
     updates(this);
   }
 
@@ -49,7 +49,7 @@ class ListBuilder<E> {
     if (iterable is _BuiltList<E>) {
       _setOwner(iterable);
     } else {
-      _setSafeList(new List<E>.from(iterable));
+      _setSafeList(List<E>.from(iterable));
     }
   }
 
@@ -121,7 +121,7 @@ class ListBuilder<E> {
   }
 
   /// As [List.sort].
-  void sort([int compare(E a, E b)]) {
+  void sort([int Function(E, E) compare]) {
     _safeList.sort(compare);
   }
 
@@ -177,14 +177,14 @@ class ListBuilder<E> {
   E removeLast() => _safeList.removeLast();
 
   /// As [List.removeWhere].
-  void removeWhere(bool test(E element)) {
+  void removeWhere(bool Function(E) test) {
     _safeList.removeWhere(test);
   }
 
   /// As [List.retainWhere].
   ///
   /// This method is an alias of [where].
-  void retainWhere(bool test(E element)) {
+  void retainWhere(bool Function(E) test) {
     _safeList.retainWhere(test);
   }
 
@@ -221,7 +221,7 @@ class ListBuilder<E> {
   // Based on Iterable.
 
   /// As [Iterable.map], but updates the builder in place. Returns nothing.
-  void map(E f(E element)) {
+  void map(E Function(E) f) {
     var result = _list.map(f).toList(growable: true);
     _checkElements(result);
     _setSafeList(result);
@@ -230,10 +230,10 @@ class ListBuilder<E> {
   /// As [Iterable.where], but updates the builder in place. Returns nothing.
   ///
   /// This method is an alias of [retainWhere].
-  void where(bool test(E element)) => retainWhere(test);
+  void where(bool Function(E) test) => retainWhere(test);
 
   /// As [Iterable.expand], but updates the builder in place. Returns nothing.
-  void expand(Iterable<E> f(E element)) {
+  void expand(Iterable<E> Function(E) f) {
     var result = _list.expand(f).toList(growable: true);
     _checkElements(result);
     _setSafeList(result);
@@ -246,7 +246,7 @@ class ListBuilder<E> {
 
   /// As [Iterable.takeWhile], but updates the builder in place. Returns
   /// nothing.
-  void takeWhile(bool test(E value)) {
+  void takeWhile(bool Function(E) test) {
     _setSafeList(_list = _list.takeWhile(test).toList(growable: true));
   }
 
@@ -257,7 +257,7 @@ class ListBuilder<E> {
 
   /// As [Iterable.skipWhile], but updates the builder in place. Returns
   /// nothing.
-  void skipWhile(bool test(E value)) {
+  void skipWhile(bool Function(E) test) {
     _setSafeList(_list.skipWhile(test).toList(growable: true));
   }
 
@@ -279,21 +279,21 @@ class ListBuilder<E> {
 
   List<E> get _safeList {
     if (_listOwner != null) {
-      _setSafeList(new List<E>.from(_list, growable: true));
+      _setSafeList(List<E>.from(_list, growable: true));
     }
     return _list;
   }
 
   void _checkGenericTypeParameter() {
     if (E == dynamic) {
-      throw new UnsupportedError('explicit element type required, '
+      throw UnsupportedError('explicit element type required, '
           'for example "new ListBuilder<int>"');
     }
   }
 
   void _checkElement(E element) {
     if (identical(element, null)) {
-      throw new ArgumentError('null element');
+      throw ArgumentError('null element');
     }
   }
 
