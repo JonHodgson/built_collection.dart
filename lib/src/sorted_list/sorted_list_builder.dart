@@ -25,8 +25,8 @@ class SortedListBuilder<E> {
   /// Right: `new SortedListBuilder<int>([1, 2, 3])`,
   ///
   /// Rejects nulls. Rejects elements of the wrong type.
-  factory SortedListBuilder([_Compare compare = null, Iterable iterable = const []]) {
-    return new SortedListBuilder<E>._uninitialized(compare)..replace(iterable);
+  factory SortedListBuilder([_Compare compare, Iterable iterable = const []]) {
+    return SortedListBuilder<E>._uninitialized(compare)..replace(iterable);
   }
 
   /// Converts to a [BuiltSortedList].
@@ -35,19 +35,19 @@ class SortedListBuilder<E> {
   /// of `BuiltSortedList`s.
   BuiltSortedList<E> build() {
     if (_listOwner == null) {
-      _setOwner(new _BuiltSortedList<E>.withSafeList(compare, _list));
+      _setOwner(_BuiltSortedList<E>.withSafeList(compare, _list));
     }
     return _listOwner;
   }
 
   /// Applies a function to `this`.
-  void update(updates(SortedListBuilder<E> builder)) {
+  void update(Function(SortedListBuilder<E> builder) updates) {
     updates(this);
   }
 
   /// Replaces all elements with elements from an [Iterable].
   void replace(Iterable iterable) {
-    var newList = new List<E>.from(iterable);
+    var newList = List<E>.from(iterable);
     if (compare != null) newList.sort(compare);
     _setSafeList(newList);
   }
@@ -60,7 +60,7 @@ class SortedListBuilder<E> {
   /// As [List].
   void operator []=(int index, E element) {
     _checkElement(element);
-    if (this.compare(_safeList[index], element) == 0) {
+    if (compare(_safeList[index], element) == 0) {
       _safeList[index] = element;
     } else {
       _safeList.removeAt(index);
@@ -98,7 +98,7 @@ class SortedListBuilder<E> {
   /// As [List.add].
   void add(E value) {
     _checkElement(value);
-    var index = this.compare == null ? -1 : _safeList.indexWhere((item) => this.compare(value, item) <= 0);
+    var index = compare == null ? -1 : _safeList.indexWhere((item) => compare(value, item) <= 0);
     if (index < 0) {
       _safeList.add(value);
     } else {
@@ -121,7 +121,7 @@ class SortedListBuilder<E> {
       safeList.removeRange(lengthBefore, safeList.length);
       rethrow;
     }
-    _safeList.sort(this.compare);
+    _safeList.sort(compare);
   }
 
   /// As [List.reversed], but updates the builder in place. Returns nothing.
@@ -152,14 +152,14 @@ class SortedListBuilder<E> {
   E removeLast() => _safeList.removeLast();
 
   /// As [List.removeWhere].
-  void removeWhere(bool test(E element)) {
+  void removeWhere(bool Function(E element) test) {
     _safeList.removeWhere(test);
   }
 
   /// As [List.retainWhere].
   ///
   /// This method is an alias of [where].
-  void retainWhere(bool test(E element)) {
+  void retainWhere(bool Function(E element) test) {
     _safeList.retainWhere(test);
   }
 
@@ -196,7 +196,7 @@ class SortedListBuilder<E> {
   // Based on Iterable.
 
   /// As [Iterable.map], but updates the builder in place. Returns nothing.
-  void map(E f(E element)) {
+  void map(E Function(E element) f) {
     var result = _list.map(f).toList(growable: true);
     _checkElements(result);
     _setSafeList(result);
@@ -205,10 +205,10 @@ class SortedListBuilder<E> {
   /// As [Iterable.where], but updates the builder in place. Returns nothing.
   ///
   /// This method is an alias of [retainWhere].
-  void where(bool test(E element)) => retainWhere(test);
+  void where(bool Function(E element) test) => retainWhere(test);
 
   /// As [Iterable.expand], but updates the builder in place. Returns nothing.
-  void expand(Iterable<E> f(E element)) {
+  void expand(Iterable<E> Function(E element) f) {
     var result = _list.expand(f).toList(growable: true);
     _checkElements(result);
     _setSafeList(result);
@@ -221,7 +221,7 @@ class SortedListBuilder<E> {
 
   /// As [Iterable.takeWhile], but updates the builder in place. Returns
   /// nothing.
-  void takeWhile(bool test(E value)) {
+  void takeWhile(bool Function(E value) test) {
     _setSafeList(_list = _list.takeWhile(test).toList(growable: true));
   }
 
@@ -232,7 +232,7 @@ class SortedListBuilder<E> {
 
   /// As [Iterable.skipWhile], but updates the builder in place. Returns
   /// nothing.
-  void skipWhile(bool test(E value)) {
+  void skipWhile(bool Function(E value) test) {
     _setSafeList(_list.skipWhile(test).toList(growable: true));
   }
 
@@ -254,21 +254,21 @@ class SortedListBuilder<E> {
 
   List<E> get _safeList {
     if (_listOwner != null) {
-      _setSafeList(new List<E>.from(_list, growable: true));
+      _setSafeList(List<E>.from(_list, growable: true));
     }
     return _list;
   }
 
   void _checkGenericTypeParameter() {
     if (E == dynamic) {
-      throw new UnsupportedError('explicit element type required, '
+      throw UnsupportedError('explicit element type required, '
           'for example "new SortedListBuilder<int>"');
     }
   }
 
   void _checkElement(E element) {
     if (identical(element, null)) {
-      throw new ArgumentError('null element');
+      throw ArgumentError('null element');
     }
   }
 

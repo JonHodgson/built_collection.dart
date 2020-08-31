@@ -4,7 +4,7 @@
 
 part of built_collection.sorted_list;
 
-typedef int _Compare<E>(E a, E b);
+typedef _Compare<E> = int Function(E a, E b);
 
 /// The Built Collection Sorted[List].
 ///
@@ -31,7 +31,7 @@ abstract class BuiltSortedList<E> implements Iterable<E>, BuiltIterable<E> {
   ///
   /// Rejects nulls. Rejects elements of the wrong type.
   factory BuiltSortedList(_Compare<E> compare, [Iterable iterable = const []]) =>
-      new BuiltSortedList<E>.from(compare, iterable);
+      BuiltSortedList<E>.from(compare, iterable);
 
   /// Instantiates with elements from an [Iterable].
   ///
@@ -46,7 +46,7 @@ abstract class BuiltSortedList<E> implements Iterable<E>, BuiltIterable<E> {
     if (iterable is _BuiltSortedList && iterable.hasExactElementType(E)) {
       return iterable as BuiltSortedList<E>;
     } else {
-      return new _BuiltSortedList<E>.copyAndCheckTypes(compare, iterable);
+      return _BuiltSortedList<E>.copyAndCheckTypes(compare, iterable);
     }
   }
 
@@ -59,30 +59,30 @@ abstract class BuiltSortedList<E> implements Iterable<E>, BuiltIterable<E> {
     if (iterable is _BuiltSortedList<E> && iterable.hasExactElementType(E)) {
       return iterable;
     } else {
-      return new _BuiltSortedList<E>.copyAndCheckForNull(compare, iterable);
+      return _BuiltSortedList<E>.copyAndCheckForNull(compare, iterable);
     }
   }
 
   /// Creates a [SortedListBuilder], applies updates to it, and builds.
-  factory BuiltSortedList.build(_Compare<E> compare, updates(SortedListBuilder<E> builder)) =>
-      (new SortedListBuilder<E>(compare)..update(updates)).build();
+  factory BuiltSortedList.build(_Compare<E> compare, Function(SortedListBuilder<E> builder) updates) =>
+      (SortedListBuilder<E>(compare)..update(updates)).build();
 
   /// Converts to a [SortedListBuilder] for modification.
   ///
   /// The `BuiltSortedList` remains immutable and can continue to be used.
-  SortedListBuilder<E> toBuilder() => new SortedListBuilder<E>(compare, this);
+  SortedListBuilder<E> toBuilder() => SortedListBuilder<E>(compare, this);
 
   /// Converts to a [SortedListBuilder], applies updates to it, and builds.
-  BuiltSortedList<E> rebuild(updates(SortedListBuilder<E> builder)) =>
+  BuiltSortedList<E> rebuild(Function(SortedListBuilder<E> builder) updates) =>
       (toBuilder()..update(updates)).build();
 
   BuiltSortedList<E> toBuiltSortedList() => this;
 
   @override
-  BuiltList<E> toBuiltList() => new BuiltList.from(this);
+  BuiltList<E> toBuiltList() => BuiltList.from(this);
 
   @override
-  BuiltSet<E> toBuiltSet() => new BuiltSet<E>(this);
+  BuiltSet<E> toBuiltSet() => BuiltSet<E>(this);
 
   /// Deep hashCode.
   ///
@@ -90,9 +90,7 @@ abstract class BuiltSortedList<E> implements Iterable<E>, BuiltIterable<E> {
   /// the same order. Then, the `hashCode` is guaranteed to be the same.
   @override
   int get hashCode {
-    if (_hashCode == null) {
-      _hashCode = hashObjects(_list);
-    }
+    _hashCode ??= hashObjects(_list);
     return _hashCode;
   }
 
@@ -119,7 +117,7 @@ abstract class BuiltSortedList<E> implements Iterable<E>, BuiltIterable<E> {
   ///
   /// Useful when producing or using APIs that need the [List] interface. This
   /// differs from [toList] where mutations are explicitly disallowed.
-  List<E> asList() => new List<E>.unmodifiable(_list);
+  List<E> asList() => List<E>.unmodifiable(_list);
 
   // List.
 
@@ -128,7 +126,7 @@ abstract class BuiltSortedList<E> implements Iterable<E>, BuiltIterable<E> {
 
   /// As [List.+].
   BuiltSortedList<E> operator +(BuiltSortedList<E> other) =>
-      new _BuiltSortedList<E>.withSafeList(compare, _list + other._list);
+      _BuiltSortedList<E>.withSafeList(compare, _list + other._list);
 
   /// As [List.length].
   @override
@@ -144,16 +142,16 @@ abstract class BuiltSortedList<E> implements Iterable<E>, BuiltIterable<E> {
   int lastIndexOf(E element, [int start]) => _list.lastIndexOf(element, start);
 
   /// As [List.indexWhere].
-  int indexWhere(bool test(E element), [int start = 0]) =>
+  int indexWhere(bool Function(E element) test, [int start = 0]) =>
       _list.indexWhere(test, start);
 
   /// As [List.lastIndexWhere].
-  int lastIndexWhere(bool test(E element), [int start]) =>
+  int lastIndexWhere(bool Function(E element) test, [int start]) =>
       _list.lastIndexWhere(test, start);
 
   /// As [List.sublist] but returns a `BuiltSortedList<E>`.
   BuiltSortedList<E> sublist(int start, [int end]) =>
-      new _BuiltSortedList<E>.withSafeList(compare, _list.sublist(start, end));
+      _BuiltSortedList<E>.withSafeList(compare, _list.sublist(start, end));
 
   /// As [List.getRange].
   Iterable<E> getRange(int start, int end) => _list.getRange(start, end);
@@ -167,41 +165,41 @@ abstract class BuiltSortedList<E> implements Iterable<E>, BuiltIterable<E> {
   Iterator<E> get iterator => _list.iterator;
 
   @override
-  Iterable<T> map<T>(T f(E e)) => _list.map(f);
+  Iterable<T> map<T>(T Function(E e) f) => _list.map(f);
 
   @override
-  Iterable<E> where(bool test(E element)) => _list.where(test);
+  Iterable<E> where(bool Function(E element) test) => _list.where(test);
 
   @override
   Iterable<T> whereType<T>() => _list.whereType<T>();
 
   @override
-  Iterable<T> expand<T>(Iterable<T> f(E e)) => _list.expand(f);
+  Iterable<T> expand<T>(Iterable<T> Function(E e) f) => _list.expand(f);
 
   @override
   bool contains(Object element) => _list.contains(element);
 
   @override
-  void forEach(void f(E element)) => _list.forEach(f);
+  void forEach(void Function(E element) f) => _list.forEach(f);
 
   @override
-  E reduce(E combine(E value, E element)) => _list.reduce(combine);
+  E reduce(E Function(E value, E element) combine) => _list.reduce(combine);
 
   @override
-  T fold<T>(T initialValue, T combine(T previousValue, E element)) =>
+  T fold<T>(T initialValue, T Function(T previousValue, E element) combine) =>
       _list.fold(initialValue, combine);
 
   @override
   Iterable<E> followedBy(Iterable<E> other) => _list.followedBy(other);
 
   @override
-  bool every(bool test(E element)) => _list.every(test);
+  bool every(bool Function(E element) test) => _list.every(test);
 
   @override
   String join([String separator = '']) => _list.join(separator);
 
   @override
-  bool any(bool test(E element)) => _list.any(test);
+  bool any(bool Function(E element) test) => _list.any(test);
 
   /// As [Iterable.toList].
   ///
@@ -213,7 +211,7 @@ abstract class BuiltSortedList<E> implements Iterable<E>, BuiltIterable<E> {
   /// but don't actually mutate it.
   @override
   List<E> toList({bool growable = true}) =>
-      new CopyOnWriteList<E>(_list, growable);
+      CopyOnWriteList<E>(_list, growable);
 
   @override
   Set<E> toSet() => _list.toSet();
@@ -228,13 +226,13 @@ abstract class BuiltSortedList<E> implements Iterable<E>, BuiltIterable<E> {
   Iterable<E> take(int n) => _list.take(n);
 
   @override
-  Iterable<E> takeWhile(bool test(E value)) => _list.takeWhile(test);
+  Iterable<E> takeWhile(bool Function(E value) test) => _list.takeWhile(test);
 
   @override
   Iterable<E> skip(int n) => _list.skip(n);
 
   @override
-  Iterable<E> skipWhile(bool test(E value)) => _list.skipWhile(test);
+  Iterable<E> skipWhile(bool Function(E value) test) => _list.skipWhile(test);
 
   @override
   E get first => _list.first;
@@ -246,15 +244,15 @@ abstract class BuiltSortedList<E> implements Iterable<E>, BuiltIterable<E> {
   E get single => _list.single;
 
   @override
-  E firstWhere(bool test(E element), {E orElse()}) =>
+  E firstWhere(bool Function(E element) test, {E Function() orElse}) =>
       _list.firstWhere(test, orElse: orElse);
 
   @override
-  E lastWhere(bool test(E element), {E orElse()}) =>
+  E lastWhere(bool Function(E element) test, {E Function() orElse}) =>
       _list.lastWhere(test, orElse: orElse);
 
   @override
-  E singleWhere(bool test(E element), {E orElse()}) =>
+  E singleWhere(bool Function(E element) test, {E Function() orElse}) =>
       _list.singleWhere(test, orElse: orElse);
 
   @override
@@ -267,7 +265,7 @@ abstract class BuiltSortedList<E> implements Iterable<E>, BuiltIterable<E> {
 
   BuiltSortedList._(this.compare, this._list) {
     if (E == dynamic) {
-      throw new UnsupportedError(
+      throw UnsupportedError(
           'explicit element type required, for example "new BuiltSortedList<int>"');
     }
   }
@@ -279,19 +277,19 @@ class _BuiltSortedList<E> extends BuiltSortedList<E> {
   _BuiltSortedList.withSafeList(_Compare<E> compare, List<E> list) : super._(compare, list);
 
   _BuiltSortedList.copyAndCheckTypes(_Compare<E> compare,[Iterable iterable = const []])
-      : super._(compare, new List<E>.from(iterable, growable: false)) {
+      : super._(compare, List<E>.from(iterable, growable: false)) {
     for (var element in _list) {
       if (element is! E) {
-        throw new ArgumentError('iterable contained invalid element: $element');
+        throw ArgumentError('iterable contained invalid element: $element');
       }
     }
   }
 
   _BuiltSortedList.copyAndCheckForNull(_Compare<E> compare, Iterable<E> iterable)
-      : super._(compare, new List<E>.from(iterable, growable: false)) {
+      : super._(compare, List<E>.from(iterable, growable: false)) {
     for (var element in _list) {
       if (identical(element, null)) {
-        throw new ArgumentError('iterable contained invalid element: null');
+        throw ArgumentError('iterable contained invalid element: null');
       }
     }
   }
