@@ -1,5 +1,13 @@
 # Changelog
 
+## 4.3.2
+
+- Add an `example` folder with some example code.
+
+## 4.3.1
+
+- Internal: cleanup for pedantic v1.9.0 lints.
+
 ## 4.3.0
 
 - Add extensions methods: `List.build`, `Set.build`, `Map.build`,
